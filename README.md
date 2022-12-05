@@ -19,8 +19,8 @@ $ pip install -r requirements.txt
 Execute SQL.
 
 ```sh
-$ echo 'SELECT * FROM ALL_TABLES ORDER BY OWNER,TABLE_NAME;' \
+$ echo 'SELECT * FROM USER_TABLES ORDER BY TABLE_NAME' \
     | ./oraclesql.py -
 ```
 
-Run `oraclesql.py --help`.
+Run `./oraclesql.py --help`.

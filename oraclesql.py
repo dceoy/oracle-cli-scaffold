@@ -22,7 +22,9 @@ def main():
         user=args.db_user, password=args.db_password,
         dsn=args.db_dsn, encoding='UTF-8'
     )
+    logger.debug(f'connection: {connection}')
     cursor = connection.cursor()
+    logger.debug(f'cursor: {cursor}')
     cursor.execute(sql)
 
 
