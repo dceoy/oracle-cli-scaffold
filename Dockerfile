@@ -3,7 +3,7 @@ FROM ubuntu:latest
 ENV DEBIAN_FRONTEND noninteractive
 
 ADD https://bootstrap.pypa.io/get-pip.py /tmp/get-pip.py
-ADD . /tmp/pdoracle
+ADD . /tmp/pdrdb
 
 RUN set -e \
       && apt-get -y update \
@@ -16,7 +16,7 @@ RUN set -e \
 
 RUN set -e \
       && /usr/bin/python3 /tmp/get-pip.py \
-      && pip install -U --no-cache-dir pip /tmp/pdoracle \
-      && rm -rf /tmp/get-pip.py /tmp/pdoracle
+      && pip install -U --no-cache-dir pip /tmp/pdrdb \
+      && rm -rf /tmp/get-pip.py /tmp/pdrdb
 
-ENTRYPOINT ["/usr/local/bin/pdoracle"]
+ENTRYPOINT ["/usr/local/bin/pdrdb"]

@@ -2,31 +2,25 @@
 
 from setuptools import find_packages, setup
 
-version = None
-
-with open('pdoracle.py', 'r') as f:
-    for s in f.readlines:
-        if s.startswith('__version__ = '):
-            version = s.strip().split(' ')[2][1:-1]
-            break
+from pdrdb import __version__
 
 with open('README.md', 'r') as f:
     long_description = f.read()
 
 setup(
-    name='pdoracle',
-    version=version,
+    name='pdrdb',
+    version=__version__,
     author='dceoy',
     author_email='dnarsil+github@gmail.com',
-    description='Pandas-based SQL Executor for Oracle DB',
+    description='Pandas-based SQL Executor for RDBMS',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    url='https://github.com/dceoy/pdoracle.git',
+    url='https://github.com/dceoy/pdrdb.git',
     packages=find_packages(),
     include_package_data=True,
-    install_requires=['cx_Oracle', 'pandas'],
+    install_requires=['cx_Oracle', 'pandas', 'psycopg2-binary', 'sqlalchemy'],
     entry_points={
-        'console_scripts': ['pdoracle=pdoracle:main']
+        'console_scripts': ['pdrdb=pdrdb.cli:main']
     },
     classifiers=[
         'Development Status :: 3 - Alpha',

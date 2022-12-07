@@ -2,14 +2,14 @@
 version: '3'
 
 services:
-  pdoracle:
-    container_name: pdoracle
+  pdrdb:
+    container_name: pdrdb
     build:
       context: .
       dockerfile: Dockerfile
-    image: dceoy/pdoracle:latest
+    image: dceoy/pdrdb:latest
     volumes:
       - ${PWD}:/wd
     working_dir: /wd
     entrypoint:
-      - pdoracle
+      - pdrdb
