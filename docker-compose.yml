@@ -1,0 +1,15 @@
+---
+version: '3'
+
+services:
+  pdoracle:
+    container_name: pdoracle
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: dceoy/pdoracle:latest
+    volumes:
+      - ${PWD}:/wd
+    working_dir: /wd
+    entrypoint:
+      - pdoracle
