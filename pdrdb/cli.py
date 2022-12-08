@@ -18,63 +18,29 @@ def main():
     _set_log_config(args=args)
     logger = logging.getLogger(__name__)
     logger.debug('args:' + os.linesep + pformat(vars(args)))
-    if args.rdbms == 'sqlite':
-        url = f'sqlite:///{args.db_dsn}'
-    else:
-        url = f'{args.rdbms}://{args.db_user}:{args.db_password}@{args.db_dsn}'
     if args.user_tables:
-        if args.rdbms == 'sqlite':
-            sqls = [
-                'SELECT * FROM sqlite_master'
-                ' WHERE type = \'table\' ORDER BY name'
-            ]
-        elif args.rdbms == 'postgresql':
-            sqls = [
-                'SELECT * FROM information_schema.tables ORDER BY table_name'
-            ]
-        elif args.rdbms == 'mysql':
-            sqls = [
-                'SELECT * FROM information_schema.TABLES'
-                ' WHERE TABLE_TYPE = \'BASE_TABLE\' ORDER BY TABLE_NAME'
-            ]
-        elif args.rdbms == 'oracle':
-            sqls = ['SELECT * FROM USER_TABLES ORDER BY TABLE_NAME']
-        else:
-            raise NotImplementedError(f'unimplemented RDBMS: {args.rdbms}')
+        sqls = [_fetch_sql_to_list_tables(rdbms=args.rdbms)]
     elif args.user_views:
-        if args.rdbms == 'sqlite':
-            sqls = [
-                'SELECT name FROM sqlite_master'
-                ' WHERE type = \'table\' ORDER BY name'
-            ]
-        elif args.rdbms == 'postgresql':
-            sqls = [
-                'SELECT * FROM information_schema.views ORDER BY table_name'
-            ]
-        elif args.rdbms == 'mysql':
-            sqls = [
-                'SELECT * FROM information_schema.TABLES'
-                ' WHERE TABLE_TYPE = \'VIEW\' ORDER BY TABLE_NAME'
-            ]
-        elif args.rdbms == 'oracle':
-            sqls = ['SELECT * FROM USER_VIEWS ORDER BY VIEW_NAME']
-        else:
-            raise NotImplementedError(f'unimplemented RDBMS: {args.rdbms}')
+        sqls = [_fetch_sql_to_list_views(rdbms=args.rdbms)]
     elif args.sql_command:
-        sqls = [args.sql_command]
+        cmd = args.sql_command.strip()
+        sqls = [cmd[:-1] if cmd.endswith(';') else cmd]
     else:
         sqls = list(_read_sql_input(path=args.sql_path))
-    engine = create_engine(url)
+    engine = _create_sqlalchemy_engine(
+        rdbms=args.rdbms, db_dsn=args.db_dsn, db_user=args.db_user,
+        db_password=args.db_password
+    )
     logger.debug(f'engine: {engine}')
     for i, sql in enumerate(sqls):
-        logger.info(f'sql: {sql}')
-        df = pd.read_sql_query(sql, engine)
         if i > 0:
             print('---')
+        logger.info(f'sql: {sql}')
+        df = pd.read_sql_query(sql, engine)
         if args.csv:
-            print(df.to_csv(sys.stdout, sep=',', index=False))
+            df.to_csv(sys.stdout, sep=',', index=False)
         elif args.tsv:
-            print(df.to_csv(sys.stdout, sep='\t', index=False))
+            df.to_csv(sys.stdout, sep='\t', index=False)
         else:
             print(df)
 
@@ -92,6 +58,59 @@ def _read_sql_input(path='-'):
             sql_lines.append(r)
     if sql_lines:
         yield ' '.join(sql_lines)
+
+
+def _create_sqlalchemy_engine(rdbms='sqlite', db_dsn=None, db_user=None,
+                              db_password=None):
+    logger = logging.getLogger(__name__)
+    if rdbms != 'sqlite':
+        assert db_dsn, 'db_dsn is required.'
+        assert db_user, 'db_user is required.'
+        assert db_password, 'db_password is required.'
+        url = f'{rdbms}://{db_user}:{db_password}@{db_dsn}'
+    elif db_dsn:
+        url = f'sqlite:///{db_dsn}'
+    else:
+        url = 'sqlite://'
+    logger.debug(f'url: {url}')
+    return create_engine(url)
+
+
+def _fetch_sql_to_list_views(rdbms='sqlite'):
+    if rdbms == 'sqlite':
+        return (
+            'SELECT name FROM sqlite_master'
+            ' WHERE type = \'table\' ORDER BY name'
+        )
+    elif rdbms == 'postgresql':
+        return 'SELECT * FROM information_schema.views ORDER BY table_name'
+    elif rdbms == 'mysql':
+        return (
+            'SELECT * FROM information_schema.TABLES'
+            ' WHERE TABLE_TYPE = \'VIEW\' ORDER BY TABLE_NAME'
+        )
+    elif rdbms == 'oracle':
+        return 'SELECT * FROM USER_VIEWS ORDER BY VIEW_NAME'
+    else:
+        raise NotImplementedError(f'unimplemented RDBMS: {rdbms}')
+
+
+def _fetch_sql_to_list_tables(rdbms='sqlite'):
+    if rdbms == 'sqlite':
+        return (
+            'SELECT * FROM sqlite_master WHERE type = \'table\' ORDER BY name'
+        )
+    elif rdbms == 'postgresql':
+        return 'SELECT * FROM information_schema.tables ORDER BY table_name'
+    elif rdbms == 'mysql':
+        return (
+            'SELECT * FROM information_schema.TABLES'
+            ' WHERE TABLE_TYPE = \'BASE_TABLE\' ORDER BY TABLE_NAME'
+        )
+    elif rdbms == 'oracle':
+        return 'SELECT * FROM USER_TABLES ORDER BY TABLE_NAME'
+    else:
+        raise NotImplementedError(f'unimplemented RDBMS: {rdbms}')
 
 
 def _set_log_config(args):
