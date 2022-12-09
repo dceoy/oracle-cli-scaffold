@@ -36,13 +36,18 @@ def main():
         if i > 0:
             print('---')
         logger.info(f'sql: {sql}')
-        df = pd.read_sql_query(sql, engine)
-        if args.csv:
-            df.to_csv(sys.stdout, sep=',', index=False)
-        elif args.tsv:
-            df.to_csv(sys.stdout, sep='\t', index=False)
+        try:
+            df = pd.read_sql_query(sql, engine)
+        except Exception as e:
+            logger.error(f'sql: {sql}')
+            raise e
         else:
-            print(df)
+            if args.csv:
+                df.to_csv(sys.stdout, sep=',', index=False)
+            elif args.tsv:
+                df.to_csv(sys.stdout, sep='\t', index=False)
+            else:
+                print(df)
 
 
 def _read_sql_input(path='-'):
