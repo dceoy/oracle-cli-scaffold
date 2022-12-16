@@ -22,6 +22,8 @@ def main():
         sqls = [_fetch_sql_to_list_tables(rdbms=args.rdbms)]
     elif args.user_views:
         sqls = [_fetch_sql_to_list_views(rdbms=args.rdbms)]
+    elif args.table:
+        sqls = [f'SELECT * FROM {args.table}']
     elif args.sql_command:
         cmd = args.sql_command.strip()
         sqls = [cmd[:-1] if cmd.endswith(';') else cmd]
@@ -178,6 +180,9 @@ def _parse_arguments():
     )
     command_parser.add_argument(
         '--user-views', action='store_true', help='list user views'
+    )
+    command_parser.add_argument(
+        '--table', action='store', type=str, help='fetch all data from a table'
     )
     format_parser = parser.add_mutually_exclusive_group()
     format_parser.add_argument(
